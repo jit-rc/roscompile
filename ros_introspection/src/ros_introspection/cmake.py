@@ -6,7 +6,7 @@ ORDERING = ['cmake_minimum_required', 'project', 'set_directory_properties', 'fi
             'set', 'catkin_generate_virtualenv', 'catkin_python_setup', 'add_definitions',
             'add_message_files', 'add_service_files', 'add_action_files',
             'generate_dynamic_reconfigure_options', 'generate_messages', 'catkin_package', 'catkin_metapackage',
-            'include_directories', BUILD_TARGET_COMMANDS,
+            BUILD_TARGET_COMMANDS + ['include_directories'],
             ['roslint_cpp', 'roslint_python', 'roslint_add_test'],
             'catkin_add_gtest', 'group',
             ['install', 'catkin_install_python']]
@@ -45,6 +45,13 @@ def get_sort_key(content, anchors):
             key = anchors.index('include_directories')
     return index, key
 
+
+def sort_key_diff(key0, key1):
+    d0 = key0[0] - key1[0]
+    if type(key0[1]) == tuple and type(key1[1]) == tuple:
+        return d0, key0[1][0] - key1[1][0]
+    else:
+        return d0, 0
 
 class SectionStyle:
     def __init__(self):
@@ -188,20 +195,57 @@ class CMake:
         return s
 
     def get_insertion_index(self, cmd):
+        '''
+           return the best index to insert the new command into
+
+           first, the index before should have a key that is less than the given key
+
+           second, because other things are out of order sometimes, we will score the index based on the difference
+            between the previous and the next
+        '''
         anchors = self.get_ordered_build_targets()
 
         new_key = get_sort_key(cmd, anchors)
         i_index = 0
+        prev_key = (0, None)
+        best_score = None
+        best_index = None
+        # print cmd
+        # print new_key
 
         for i, content in enumerate(self.contents):
             if type(content) == str:
                 continue
             key = get_sort_key(content, anchors)
-            if key <= new_key:
+            print '\t'*3, prev_key, new_key, key, str(content)[:30].replace('\n', ' ')
+            # print '\t'*3, prev_key > key
+            if key < new_key:
+                print 'skip'
                 i_index = i + 1
             elif key[0] != len(ORDERING):
-                return i_index
-        return len(self.contents)
+                diff0 = sort_key_diff(new_key, prev_key)
+                diff1 = sort_key_diff(key, new_key)
+                diff = diff0[0] + diff1[0], diff0[1] + diff1[1], 1 if key == new_key else 0
+                print diff, '!'
+                if diff[0] >= 0 and diff[1] >= 0 and (best_score is None or diff < best_score):
+                    best_index = i_index
+                    best_score = diff
+                    # print '**'
+            else:
+                diff0 = sort_key_diff(new_key, prev_key)
+                print diff0, '!!'
+            prev_key = key
+        diff0 = sort_key_diff(new_key, prev_key)
+        if best_score is None or diff0 < best_score:
+            best_index = i
+            best_score = diff0
+
+        if best_score is None:
+            return len(self.contents)
+        else:
+            # print best_index
+            # print best_score
+            return best_index
 
     def add_command(self, cmd):
         i_index = self.get_insertion_index(cmd)
@@ -214,8 +258,6 @@ class CMake:
             sub_contents.append('\n')
         else:
             sub_contents.append(cmd)
-        if i_index == len(self.contents):
-            sub_contents.append('\n')
 
         self.contents = self.contents[:i_index] + sub_contents + self.contents[i_index:]
 
