@@ -7,7 +7,7 @@ DEPEND_ORDERING = ['buildtool_depend', 'depend', 'build_depend', 'build_export_d
                    'run_depend', 'exec_depend', 'test_depend', 'doc_depend']
 
 ORDERING = ['name', 'version', 'description',
-            ['maintainer', 'license', 'author', 'url']] + DEPEND_ORDERING + ['export']
+            ['maintainer', 'license', 'author', 'url']] + DEPEND_ORDERING + ['member_of_group', 'export']
 
 INDENT_PATTERN = re.compile('\n *')
 

@@ -1,0 +1,35 @@
+#!/usr/bin/python
+
+from ros_introspection.util import get_packages
+from magical_ros2_conversion_tool.manifest import set_build_type, update_manifest
+from magical_ros2_conversion_tool.cmake import convert_cmake
+from magical_ros2_conversion_tool.cplusplus import convert_cplusplus
+from magical_ros2_conversion_tool.generators import fix_generators
+import os
+
+def is_pure_python(package):
+    if len(package.generators) != 0:
+        return False
+    python_code = package.source_code.get_source_by_language('python')
+    cplus_code = package.source_code.get_source_by_language('c++')
+    return len(python_code) > 0 and len(cplus_code) == 0
+
+pkgs = get_packages()
+
+for package in pkgs:
+    print package
+
+    update_manifest(package)
+
+    if len(package.generators) > 0:
+        fix_generators(package)
+
+    if is_pure_python(package):
+        set_build_type(package.manifest, 'ament_python')
+        os.remove(package.cmake.file_path)
+    else:
+        set_build_type(package.manifest, 'ament_cmake')
+        convert_cplusplus(package)
+        convert_cmake(package)
+
+    package.write()
