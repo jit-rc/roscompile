@@ -55,7 +55,7 @@ for pkg in rospack.list():
         for gen_key in list_types(pkg, mode, rospack):
             pkg, gen = gen_key.split('/')
             ros_set.add((pkg, gen))
-
+PACKAGES.add('rclcpp')
 
 def is_package(pkg):
     return pkg in PACKAGES

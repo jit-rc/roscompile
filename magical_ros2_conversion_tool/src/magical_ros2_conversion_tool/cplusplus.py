@@ -22,8 +22,10 @@ CPP_CODE_REPLACEMENTS = {
     'ros::Rate': 'rclcpp::Rate',
     'ros::Duration': 'rclcpp::Duration',
     'ros::ok\(\)': 'rclcpp::ok()',
-    'ros::init\(argc, argv, "[^"]*"\);': 'rclcpp::init(argc, argv);',
+    '( *)ros::init\(argc, argv, "([^"]*)"\);':
+        '$0rclcpp::init(argc, argv);\n$0auto node = rclcpp::Node::make_shared("$1");',
     'ros::spinOnce\(\);': 'rclcpp::spin_some(node);',
+    'ros::spin\(\);': 'rclcpp::spin(node);',
     'ros::NodeHandle': 'rclcpp::Node',
     'ros::Publisher (.*) = (.*)advertise(.*);': 'auto $0 = $1advertise$2;',
 
