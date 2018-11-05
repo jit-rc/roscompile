@@ -6,11 +6,13 @@ ORDERING = ['cmake_minimum_required', 'project', 'set_directory_properties', 'fi
             'set', 'catkin_generate_virtualenv', 'catkin_python_setup', 'add_definitions',
             'add_message_files', 'add_service_files', 'add_action_files', 'rosidl_generate_interfaces',
             'generate_dynamic_reconfigure_options', 'generate_messages',
-            ['ament_export_include_directories'],
-            'catkin_package', 'ament_package', 'catkin_metapackage',
+            'catkin_package', 'catkin_metapackage',
             BUILD_TARGET_COMMANDS + ['include_directories'],
             ['roslint_cpp', 'roslint_python', 'roslint_add_test'],
             'catkin_add_gtest', 'group',
+            'ament_target_dependencies', 'ament_export_include_directories', 'ament_export_libraries',
+            'ament_export_dependencies',
+            'ament_package',
             ['install', 'catkin_install_python']]
 
 
